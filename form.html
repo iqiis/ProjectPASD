@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlekpinkFlight - Form Prediksi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-[#0F172A] text-white flex flex-col shadow-xl">
+        <div class="p-6 text-2xl font-bold tracking-wider">BlekpinkFlight</div>
+        <nav class="flex-1 mt-10 space-y-1">
+            <a href="index.php" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-slate-800/50 hover:text-white transition">
+                <i class="fas fa-th-large text-lg"></i><span class="ml-4">Dashboard</span>
+            </a>
+            <a href="form.html" class="flex items-center px-6 py-3.5 bg-sky-600/10 border-r-4 border-sky-400 text-sky-400 font-semibold group">
+                <i class="fas fa-plane-departure text-lg"></i><span class="ml-4">Prediksi</span>
+            </a>
+            <a href="riwayat.php" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-slate-800/50 hover:text-white transition">
+                <i class="fas fa-history text-lg"></i><span class="ml-4">Riwayat</span>
+            </a>
+            <a href="statistik.php" class="flex items-center px-6 py-3.5 text-slate-400 hover:bg-slate-800/50 hover:text-white transition">
+                <i class="fas fa-chart-bar text-lg"></i><span class="ml-4">Statistik</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col bg-slate-50">
+        <header class="bg-white p-4 pr-8 flex justify-end items-center space-x-4 shadow-sm border-b border-slate-100">
+            <div class="text-right">
+                <p class="text-sm font-bold text-slate-900">Pengguna Aktif</p>
+                <p class="text-xs text-sky-500 font-medium">User</p>
+            </div>
+            <div class="w-11 h-11 bg-slate-200 rounded-lg flex items-center justify-center border border-slate-300">
+                <i class="fas fa-user text-slate-400 text-xl"></i>
+            </div>
+        </header>
+
+        <div class="p-10 overflow-y-auto flex justify-center">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 w-full max-w-3xl">
+                
+                <div class="mb-8 border-b border-slate-100 pb-5">
+                    <h1 class="text-3xl font-bold text-slate-900">Form Prediksi Penerbangan</h1>
+                    <p class="text-slate-500 mt-2">Masukkan data penerbangan untuk diproses oleh model Machine Learning.</p>
+                </div>
+
+                <form action="proses.php" method="POST" class="space-y-6">
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Nama Penumpang</label>
+                        <input type="text" name="nama" required placeholder="Masukkan nama lengkap" 
+                            class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Maskapai</label>
+                            <select name="maskapai" required class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800 bg-white">
+                                <option value="">Pilih Maskapai</option>
+                                <option value="American Airlines Inc.">American Airlines</option>
+                                <option value="Delta Air Lines Inc">Delta Air Lines</option>
+                                <option value="United Air Lines Inc.">United Airlines</option>
+                                <option value="Southwest Airlines Co.">Southwest Airlines</option>
+                                <option value="JetBlue Airways">JetBlue Airways</option>
+                                <option value="Skywest Airlines Inc.">Skywest Airlines</option>
+                                <option value="Endeavor Air">Endeavor Air</option>
+                                <option value="Alaska Airlines Inc.">Alaska Airlines</option>
+                                <option value="Spirit Air Lines">Spirit Airlines</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Tail Number Pesawat</label>
+                            <input type="text" name="pesawat" required placeholder="Contoh: N691CA" 
+                                class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Bandara Asal</label>
+                            <select name="asal" required class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800 bg-white">
+                                <option value="">Pilih Bandara Asal</option>
+                                <option value="JFK">JFK - New York</option>
+                                <option value="ATL">ATL - Atlanta</option>
+                                <option value="LAX">LAX - Los Angeles</option>
+                                <option value="ORD">ORD - Chicago</option>
+                                <option value="MSP">MSP - Minneapolis</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Bandara Tujuan</label>
+                            <select name="tujuan" required class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800 bg-white">
+                                <option value="">Pilih Bandara Tujuan</option>
+                                <option value="JFK">JFK - New York</option>
+                                <option value="ATL">ATL - Atlanta</option>
+                                <option value="LAX">LAX - Los Angeles</option>
+                                <option value="ORD">ORD - Chicago</option>
+                                <option value="MSP">MSP - Minneapolis</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Jam Keberangkatan</label>
+                        <input type="time" name="jam" required 
+                            class="w-full px-5 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-300 transition text-slate-800">
+                        <p class="text-xs text-slate-400 mt-2"><i class="fas fa-info-circle"></i> Jam akan dikonversi menjadi kategori waktu pada sistem Flask.</p>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-sky-500/30">
+                            Jalankan Prediksi Sekarang
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>
