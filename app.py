@@ -15,10 +15,20 @@ try:
     model = joblib.load('model_random_forest_flight.pkl')
     scaler = joblib.load('scaler_flight.pkl')
     le_airline = joblib.load('le_airline.pkl')
-    le_airport = joblib.load('le_airport.pkl')
-    print("✅ SUCCESS: Semua file model & preprocessing berhasil dimuat!")
+    le_departure_airport = joblib.load('le_departure_airport.pkl')
+    le_arrival_airport = joblib.load('le_arrival_airport.pkl')
+    le_rain_category = joblib.load('le_rain_category.pkl')
+    le_winter = joblib.load('le_winter.pkl')
+    
+    # Load airports.csv database for coordinates and distance calculation
+    import pandas as pd
+    airports_df = pd.read_csv('airports.csv')
+    airports_df = airports_df[airports_df['iata_code'].notnull()]
+    iata_map = dict(zip(airports_df['iata_code'], zip(airports_df['latitude_deg'], airports_df['longitude_deg'])))
+    print("SUCCESS: Semua file model & preprocessing berhasil dimuat!")
 except Exception as e:
-    print(f"❌ ERROR: Gagal memuat file .pkl! Pastikan file ada di folder yang sama. Detail: {e}")
+    print(f"ERROR: Gagal memuat file .pkl atau airports.csv! Detail: {e}")
+    iata_map = {}
 
 # =================================================================
 # --- ROUTE: HALAMAN UTAMA ---
@@ -42,76 +52,92 @@ def predict_api():
         jam = data.get('jam', '12:00')
         
         # --- REKAYASA FITUR (FEATURE ENGINEERING) ---
-        # Mengubah format jam dari form (misal "14:30") menjadi mapping waktu untuk model
-        jam_inti = int(jam.split(':')[0])
-        
-        if 5 <= jam_inti < 12:
-            dep_hour = 9.0       # Pagi (Morning)
-        elif 12 <= jam_inti < 17:
-            dep_hour = 14.0      # Siang/Sore (Afternoon)
-        elif 17 <= jam_inti < 22:
-            dep_hour = 19.0      # Petang (Evening)
+        # 1. Month (parsed from date input 'YYYY-MM-DD' as float)
+        tanggal_str = data.get('tanggal', '')
+        if tanggal_str:
+            try:
+                dt = datetime.strptime(tanggal_str, "%Y-%m-%d")
+                month_val = float(dt.month)
+            except Exception:
+                month_val = float(datetime.now().month)
         else:
-            dep_hour = 2.0       # Malam/Dini Hari (Night)
+            month_val = float(datetime.now().month)
+        
+        # 2. Rain Category (passed from form select)
+        rain_category = data.get('kategori_hujan', 'Tidak Hujan')
+        
+        # 3. Winter (user-selected season: 'Dingin' / Winter maps to 'Ya', otherwise 'Tidak')
+        musim_input = data.get('musim', '')
+        winter = 'Ya' if musim_input == 'Dingin' else 'Tidak'
+        
+        # 4. Geodesic Distance via Haversine
+        def haversine_distance(lat1, lon1, lat2, lon2):
+            lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
+            c = 2.0 * np.arcsin(np.sqrt(a))
+            r = 6371.0 # km
+            return c * r
 
-        # Menentukan apakah hari ini akhir pekan (Sabtu=6, Minggu=7)
-        hari_ini = datetime.now().weekday() + 1
-        is_weekend = 1.0 if hari_ini >= 6 else 0.0
-        
-        # Menentukan apakah ini jam sibuk (Peak Hour)
-        is_peak_hour = 1.0 if ((dep_hour >= 6 and dep_hour <= 9) or (dep_hour >= 16 and dep_hour <= 19)) else 0.0
-        
-        # Fitur statis rata-rata penerbangan harian bandara
-        airport_daily_flights = 45.0
+        distance = 1200.0 # Default fallback
+        if asal in iata_map and tujuan in iata_map:
+            lat1, lon1 = iata_map[asal]
+            lat2, lon2 = iata_map[tujuan]
+            distance = haversine_distance(lat1, lon1, lat2, lon2)
         
         # --- HANDLING LABEL ENCODER (ANTI-CRASH) ---
-        # Memastikan maskapai yang dipilih ada di dalam ingatan model (le_airline)
+        # Airline
         if maskapai in le_airline.classes_:
-            carrier_code = float(le_airline.transform([maskapai])[0])
+            airline_code = le_airline.transform([maskapai])[0]
         else:
-            # Jika tidak ada, gunakan maskapai pertama dari dataset sebagai default
-            carrier_code = float(le_airline.transform([le_airline.classes_[0]])[0])
+            airline_code = le_airline.transform([le_airline.classes_[0]])[0]
             
-        # Memastikan bandara yang dipilih ada di dalam ingatan model (le_airport)
-        if asal in le_airport.classes_:
-            origin_code = float(le_airport.transform([asal])[0])
+        # Departure Airport
+        if asal in le_departure_airport.classes_:
+            dep_airport_code = le_departure_airport.transform([asal])[0]
         else:
-            # Jika tidak ada, gunakan bandara pertama dari dataset sebagai default
-            origin_code = float(le_airport.transform([le_airport.classes_[0]])[0])
-
-        # --- PARAMETER CUACA KONDISIONAL ---
-        # Mengisi data cuaca yang logis berdasarkan waktu keberangkatan
-        if dep_hour == 9.0:
-            temp_mean, wind_speed, pressure = 24.0, 3.5, 1011.0
-        elif dep_hour == 14.0:
-            temp_mean, wind_speed, pressure = 31.0, 5.0, 1008.0
+            dep_airport_code = le_departure_airport.transform([le_departure_airport.classes_[0]])[0]
+            
+        # Arrival Airport
+        if tujuan in le_arrival_airport.classes_:
+            arr_airport_code = le_arrival_airport.transform([tujuan])[0]
         else:
-            temp_mean, wind_speed, pressure = 26.0, 2.5, 1010.0
+            arr_airport_code = le_arrival_airport.transform([le_arrival_airport.classes_[0]])[0]
+            
+        # Rain Category
+        if rain_category in le_rain_category.classes_:
+            rain_code = le_rain_category.transform([rain_category])[0]
+        else:
+            rain_code = le_rain_category.transform([le_rain_category.classes_[0]])[0]
+            
+        # Winter
+        if winter in le_winter.classes_:
+            winter_code = le_winter.transform([winter])[0]
+        else:
+            winter_code = le_winter.transform([le_winter.classes_[0]])[0]
 
         # --- REKONSTRUKSI & NORMALISASI FITUR (SCALING) ---
-        # WAJIB SAMA PERSIS urutannya dengan X_train di Jupyter Notebook
+        # Scale Distance and Month
+        scaled_vals = scaler.transform([[distance, month_val]])[0]
+        scaled_distance = scaled_vals[0]
+        scaled_month = scaled_vals[1]
+        
+        # Model input: Airline, Departure Airport, Arrival Airport, Distance, Rain Category, Winter, Month
         features_raw = np.array([[
-            dep_hour, is_weekend, is_peak_hour, airport_daily_flights,
-            carrier_code, origin_code, temp_mean, wind_speed, pressure
+            airline_code, dep_airport_code, arr_airport_code,
+            scaled_distance, rain_code, winter_code, scaled_month
         ]])
         
-        # Normalisasi menggunakan scaler asli dari dataset
-        features_scaled = scaler.transform(features_raw)
-        
         # --- EKSEKUSI PREDIKSI MODEL ---
-        # Melakukan prediksi kelas (0 atau 1) dan probabilitas persentasenya
-        prediction = model.predict(features_scaled)[0]
-        probabilities = model.predict_proba(features_scaled)[0]
+        prediction = model.predict(features_raw)[0]
+        probabilities = model.predict_proba(features_raw)[0]
         prob_score = int(max(probabilities) * 100)
         
-        # Konversi hasil angka menjadi teks untuk ditampilkan di Dashboard
         status_hasil = "Tepat Waktu" if prediction == 0 else "Terlambat"
         
-        # Print log di terminal VS Code untuk monitoring
-        print(f"💡 LOG PREDIKSI: {maskapai} jam {jam} -> Hasil: {status_hasil} ({prob_score}%)")
+        print(f"LOG PREDIKSI: {maskapai} dari {asal} ke {tujuan} -> Jarak: {distance:.1f} km -> Hasil: {status_hasil} ({prob_score}%)")
         
-        # --- PENGEMBALIAN HASIL KE FORM (JSON) ---
-        # Mengemas data dalam format JSON agar bisa dibaca oleh PHP
         return jsonify({
             'status': 'success',
             'status_prediksi': status_hasil,
@@ -119,8 +145,7 @@ def predict_api():
         })
         
     except Exception as e:
-        # Jika terjadi error, catat di terminal dan kirim pesan error ke web
-        print(f"⚠️ LOG ERROR SAAT PREDIKSI: {e}")
+        print(f"LOG ERROR SAAT PREDIKSI: {e}")
         return jsonify({'status': 'error', 'message': str(e)})
 
 # =================================================================

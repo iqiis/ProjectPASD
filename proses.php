@@ -2,7 +2,7 @@
 // =================================================================
 // --- 1. KONEKSI DATABASE MYSQL ---
 // =================================================================
-$conn = mysqli_connect("localhost", "root", "", "db_penerbangan");
+$conn = mysqli_connect("127.0.0.1:3307", "root", "", "db_penerbangan");
 
 if (!$conn) {
     die("Koneksi gagal: " . mysqli_connect_error());
@@ -18,6 +18,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $asal = $_POST['asal'];
     $tujuan = $_POST['tujuan'];
     $jam = $_POST['jam'];
+    $tanggal = $_POST['tanggal'];
+    $musim = $_POST['musim'];
+    $kategori_hujan = $_POST['kategori_hujan'];
 
     // Mengemas data menjadi array asosiatif
     $data_input = array(
@@ -25,7 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         "pesawat" => $pesawat,
         "asal" => $asal,
         "tujuan" => $tujuan,
-        "jam" => $jam
+        "jam" => $jam,
+        "tanggal" => $tanggal,
+        "musim" => $musim,
+        "kategori_hujan" => $kategori_hujan
     );
 
     // =================================================================
@@ -70,8 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // --- 5. MENYIMPAN DATA (PERSISTENCE) KE MYSQL ---
     // =================================================================
     // Merekam seluruh jejak input pengguna beserta hasil komputasi model
-    $query_insert = "INSERT INTO riwayat_prediksi (nama, maskapai, pesawat, asal, tujuan, jam_terbang, status_prediksi, probabilitas) 
-                     VALUES ('$nama', '$maskapai', '$pesawat', '$asal', '$tujuan', '$jam', '$status_prediksi', '$probabilitas')";
+    $query_insert = "INSERT INTO riwayat_prediksi (nama, maskapai, pesawat, asal, tujuan, jam_terbang, status_prediksi, probabilitas, tanggal_penerbangan, musim, kategori_hujan) 
+                     VALUES ('$nama', '$maskapai', '$pesawat', '$asal', '$tujuan', '$jam', '$status_prediksi', '$probabilitas', '$tanggal', '$musim', '$kategori_hujan')";
     
     // Menyalakan alarm error eksekusi
     $eksekusi = mysqli_query($conn, $query_insert);

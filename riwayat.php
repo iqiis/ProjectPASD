@@ -1,6 +1,6 @@
 <?php
 // Melakukan koneksi ke database
-$conn = mysqli_connect("localhost", "root", "", "db_penerbangan");
+$conn = mysqli_connect("127.0.0.1:3307", "root", "", "db_penerbangan");
 
 if (!$conn) {
     die("Koneksi gagal: " . mysqli_connect_error());
@@ -72,9 +72,11 @@ $nama_user = $user_data ? $user_data['nama'] : "Pengguna";
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 text-sm uppercase tracking-wider border-b border-slate-100">
                             <th class="p-5 font-bold">Waktu Sistem</th>
+                            <th class="p-5 font-bold">Tanggal Terbang</th>
                             <th class="p-5 font-bold">Maskapai</th>
                             <th class="p-5 font-bold">Rute</th>
                             <th class="p-5 font-bold">Jam</th>
+                            <th class="p-5 font-bold">Musim & Hujan</th>
                             <th class="p-5 font-bold text-center">Status (Model)</th>
                             <th class="p-5 font-bold text-center">Probabilitas</th>
                         </tr>
@@ -83,9 +85,11 @@ $nama_user = $user_data ? $user_data['nama'] : "Pengguna";
                         <?php while($row = mysqli_fetch_array($query)) { ?>
                         <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
                             <td class="p-5"><?php echo $row['created_at']; ?></td>
+                            <td class="p-5"><?php echo $row['tanggal_penerbangan'] ? $row['tanggal_penerbangan'] : '-'; ?></td>
                             <td class="p-5 font-semibold"><?php echo $row['maskapai']; ?> <br><span class="text-xs text-slate-400 font-normal"><?php echo $row['pesawat']; ?></span></td>
                             <td class="p-5"><?php echo $row['asal']; ?> &rarr; <?php echo $row['tujuan']; ?></td>
                             <td class="p-5"><?php echo $row['jam_terbang']; ?></td>
+                            <td class="p-5 font-medium"><?php echo $row['musim'] ? $row['musim'] : '-'; ?> <br><span class="text-xs text-slate-400 font-normal"><?php echo $row['kategori_hujan'] ? $row['kategori_hujan'] : '-'; ?></span></td>
                             <td class="p-5 text-center">
                                 <?php if($row['status_prediksi'] == 'Tepat Waktu') { ?>
                                     <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Tepat Waktu</span>
